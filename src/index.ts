@@ -95,6 +95,8 @@ export default function useForm<TForm extends FormDataType>(data: TForm | (() =>
             axiosOptions.url = url
             axiosOptions.data = this.data()
 
+            console.log(axios.defaults)
+
             axios.request(axiosOptions)
                 .then((response: AxiosResponse<any, any>): void => {
                     this.clearErrors()
