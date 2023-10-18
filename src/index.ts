@@ -123,7 +123,7 @@ export default function useForm<TForm extends FormDataType>(data: TForm | (() =>
                     const errResponse: any = error.response.data.errors
                     this.setError(errResponse)
                     if (!!options?.onError) {
-                        options.onError(errResponse)
+                        options.onError(error.response)
                     }
                 })
                 .finally((): void => {
