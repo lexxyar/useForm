@@ -1,0 +1,41 @@
+{
+  "name": "@lexxsoft/useform",
+  "version": "0.1.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "npx tsc",
+    "watch": "npx tsc -w",
+    "patch": "npm version patch",
+    "minor": "npm version minor",
+    "major": "npm version release",
+    "test": "npm run build && mocha",
+    "upd": "npm i @lexxsoft/upui@latest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lexxyar/useForm.git"
+  },
+  "keywords": [
+    "vue",
+    "form",
+    "axios",
+    "typescript",
+    "javascript"
+  ],
+  "author": "Aleksey Komov",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lexxyar/useForm/issues"
+  },
+  "homepage": "https://github.com/lexxyar/useForm#readme",
+  "devDependencies": {
+    "typescript": "^5.2.2",
+    "vue": "^3.2.36"
+  },
+  "dependencies": {
+    "lodash.clonedeep": "^4.5.0",
+    "axios": "^1.1.2"
+  }
+}
