@@ -12,11 +12,12 @@ type CallbackFunctionNoParams = () => void
 type CallbackFunctionOneParam = (response: AxiosResponse<any, any>) => void
 
 export interface RequestOptions {
-    headers?: (RawAxiosRequestHeaders & MethodsHeaders) | AxiosHeaders;
-    onError?: CallbackFunctionOneParam,
-    onSuccess?: CallbackFunctionOneParam,
-    onStart?: CallbackFunctionNoParams,
-    onFinish?: CallbackFunctionNoParams,
+    baseUrl?: string | null
+    headers?: (RawAxiosRequestHeaders & MethodsHeaders) | AxiosHeaders
+    onError?: CallbackFunctionOneParam
+    onSuccess?: CallbackFunctionOneParam
+    onStart?: CallbackFunctionNoParams
+    onFinish?: CallbackFunctionNoParams
 }
 
 interface UpFormProps<TForm extends FormDataType> {
@@ -81,6 +82,10 @@ export default function useForm<TForm extends FormDataType>(data: TForm | (() =>
             return this
         },
         submit(method: Method, url: string, options?: Partial<RequestOptions>) {
+            if (options?.baseUrl) {
+                axios.defaults.baseURL = options.baseUrl
+            }
+
             // return new Promise(()=>{
             this.processing = true
             if (!!options?.onStart) {
@@ -95,7 +100,11 @@ export default function useForm<TForm extends FormDataType>(data: TForm | (() =>
             axiosOptions.url = url
             axiosOptions.data = this.data()
 
-            console.log(axios.defaults)
+            // // @ts-ignore
+            // if (window.up?.axios?.baseURL) {
+            //     // @ts-ignore
+            //     axios.defaults.baseURL = window.up.axios.baseURL
+            // }
 
             axios.request(axiosOptions)
                 .then((response: AxiosResponse<any, any>): void => {
@@ -105,7 +114,7 @@ export default function useForm<TForm extends FormDataType>(data: TForm | (() =>
                         options.onSuccess(response)
                     }
                 })
-                .catch((error:any): void => {
+                .catch((error: any): void => {
                     const e: Event = new Event('__up_http_response_error')
                     // @ts-ignore
                     e.detail = {type: 'danger', message: error.response.data.message ?? error.response.message}
