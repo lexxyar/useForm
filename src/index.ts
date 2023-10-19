@@ -27,6 +27,16 @@ interface UpFormProps<TForm extends FormDataType> {
 
     data(): TForm,
 
+    defaults(): this
+
+    defaults(field: keyof TForm, value: FormDataConvertible): this
+
+    defaults(fields: Partial<TForm>): this
+
+    transform(callback: (data: TForm) => object): this
+
+    reset(...fields: (keyof TForm)[]): this
+
     clearErrors(...fields: (keyof TForm)[]): this
 
     setError(field: keyof TForm, value: string): this
@@ -47,9 +57,20 @@ interface UpFormProps<TForm extends FormDataType> {
 }
 
 export type UpForm<TForm extends FormDataType> = TForm & UpFormProps<TForm>
+export type FormDataConvertible =
+    | Array<FormDataConvertible>
+    | { [key: string]: FormDataConvertible }
+    | Blob
+    | FormDataEntryValue
+    | Date
+    | boolean
+    | number
+    | null
+    | undefined
 
 export default function useForm<TForm extends FormDataType>(data: TForm | (() => TForm)): UpForm<TForm> {
     let defaults = typeof data === 'object' ? cloneDeep(data) : cloneDeep(data())
+    let transform = (data: any) => data
     const form = reactive({
         ...cloneDeep(defaults),
         hasErrors: false,
@@ -59,6 +80,45 @@ export default function useForm<TForm extends FormDataType>(data: TForm | (() =>
                 carry[key] = this[key]
                 return carry
             }, {} as Partial<TForm>) as TForm
+        },
+        defaults(fieldOrFields?: keyof TForm | Partial<TForm>, maybeValue?: FormDataConvertible) {
+            if (typeof data === 'function') {
+                throw new Error('You cannot call `defaults()` when using a function to define your form data.')
+            }
+
+            if (typeof fieldOrFields === 'undefined') {
+                defaults = this.data()
+            } else {
+                defaults = Object.assign(
+                    {},
+                    cloneDeep(defaults),
+                    typeof fieldOrFields === 'string' ? {[fieldOrFields]: maybeValue} : fieldOrFields,
+                )
+            }
+
+            return this
+        },
+        reset(...fields: any[]) {
+            const resolvedData = typeof data === 'object' ? cloneDeep(defaults) : cloneDeep(data())
+            const clonedData = cloneDeep(resolvedData)
+            if (fields.length === 0) {
+                defaults = clonedData
+                Object.assign(this, resolvedData)
+            } else {
+                Object.keys(resolvedData)
+                    .filter((key) => fields.includes(key))
+                    .forEach((key) => {
+                        defaults[key] = clonedData[key]
+                        this[key] = resolvedData[key]
+                    })
+            }
+
+            return this
+        },
+        transform(callback: (data: TForm) => object) {
+            transform = callback
+
+            return this
         },
         errors: {},
         setError(fieldOrFields: keyof TForm | Record<keyof TForm, string>, maybeValue?: string) {
@@ -106,10 +166,10 @@ export default function useForm<TForm extends FormDataType>(data: TForm | (() =>
             //     axios.defaults.baseURL = window.up.axios.baseURL
             // }
 
+            this.clearErrors()
+
             axios.request(axiosOptions)
                 .then((response: AxiosResponse<any, any>): void => {
-                    this.clearErrors()
-                    // console.log(response)
                     if (!!options?.onSuccess) {
                         options.onSuccess(response)
                     }
